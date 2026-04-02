@@ -94,12 +94,16 @@
       <p class="text-2xl font-black text-mcd-red"><span id="collect-count">0</span> 人</p>
     </div>
 
+    <button id="btn-my-order"
+      class="w-full min-h-[48px] rounded-full bg-mcd-yellow text-gray-900 font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity mb-3">
+      填我的單
+    </button>
     <button id="btn-calculate"
       class="w-full min-h-[48px] rounded-full bg-mcd-red text-white font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity mb-3">
       開始計算
     </button>
     <button id="btn-collect-back"
-      class="w-full min-h-[48px] rounded-full bg-mcd-yellow text-gray-900 font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
+      class="w-full min-h-[48px] rounded-full bg-gray-200 text-gray-700 font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
       回首頁
     </button>
   </div>
@@ -134,7 +138,10 @@
     <div id="order-success" class="hidden bg-white rounded-2xl shadow-sm p-4 text-center">
       <p class="text-2xl mb-1">✅</p>
       <p class="font-bold text-gray-800">訂單已送出！</p>
-      <p class="text-sm text-gray-500 mt-1">請等待揪團發起人統計結果</p>
+      <p id="order-success-hint" class="text-sm text-gray-500 mt-1">請等待揪團發起人統計結果</p>
+      <button id="btn-back-to-collect" class="hidden mt-3 w-full min-h-[44px] rounded-full bg-mcd-yellow text-gray-900 font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity">
+        回收單頁
+      </button>
     </div>
   </div>
 </div>
@@ -565,6 +572,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  document.getElementById('btn-my-order').addEventListener('click', async () => {
+    try {
+      const { items } = await loadMenu();
+      renderOrderForm(items);
+      showScreen('screen-order');
+    } catch (e) {
+      alert('無法載入菜單：' + e.message);
+    }
+  });
+
   document.getElementById('btn-collect-back').addEventListener('click', () => {
     history.replaceState(null, '', location.pathname);
     currentSessionId = null;
@@ -599,11 +616,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       await addOrderToSession(currentSessionId, { personName: name, wantedItems });
       btn.classList.add('hidden');
       document.getElementById('order-success').classList.remove('hidden');
+      if (localStorage.getItem(`mcd_creator_${currentSessionId}`)) {
+        document.getElementById('order-success-hint').classList.add('hidden');
+        document.getElementById('btn-back-to-collect').classList.remove('hidden');
+      }
     } catch (e) {
       alert('送出失敗：' + e.message);
       btn.disabled = false;
       btn.textContent = '送出訂單';
     }
+  });
+
+  document.getElementById('btn-back-to-collect').addEventListener('click', () => {
+    showScreen('screen-collect');
+    updateCollectScreen();
   });
 
   // 結果頁
