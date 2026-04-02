@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>麥當勞揪團點餐</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'mcd-red':    '#DA291C',
+            'mcd-yellow': '#FFC72C',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Tailwind 無法處理 display:none/block 的畫面切換 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+<!-- ============ SCREEN: HOME ============ -->
+<div id="screen-home" class="screen active">
+  <div class="max-w-sm mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+      <div class="inline-block rounded-3xl px-8 py-4 mb-3 bg-mcd-yellow">
+        <span class="text-5xl font-black text-mcd-red">M</span>
+      </div>
+      <h1 class="text-2xl font-black text-gray-800">麥當勞揪團點餐</h1>
+      <p class="text-sm text-gray-500 mt-1">合併訂單，省最多！</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <h2 class="font-bold text-gray-700 mb-3">建立新揪團</h2>
+      <button id="btn-create"
+        class="w-full min-h-[48px] rounded-full bg-mcd-red text-white font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
+        建立揪團
+      </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4">
+      <h2 class="font-bold text-gray-700 mb-3">加入揪團</h2>
+      <input id="input-join-session" type="text" maxlength="8" placeholder="輸入 Session ID（8 碼）"
+        class="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-base outline-none focus:border-mcd-red transition-colors mb-3" />
+      <button id="btn-join"
+        class="w-full min-h-[48px] rounded-full bg-mcd-yellow text-gray-900 font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
+        加入揪團
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: COLLECT ============ -->
+<div id="screen-collect" class="screen">
+  <div class="max-w-sm mx-auto px-4 py-8">
+    <div class="text-center mb-6">
+      <div class="inline-block rounded-2xl px-5 py-2 mb-2 bg-mcd-yellow">
+        <span class="font-black text-lg text-mcd-red">收單中</span>
+      </div>
+      <p class="text-sm text-gray-500">把連結傳給要一起訂餐的同事</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <p class="text-xs text-gray-400 mb-1 font-semibold">分享連結</p>
+      <div class="flex gap-2 items-center">
+        <input id="share-url" type="text" readonly
+          class="flex-1 text-sm border-2 border-gray-100 rounded-lg px-3 py-2 bg-gray-50 outline-none" />
+        <button id="btn-copy"
+          class="px-3 py-2 rounded-lg text-sm font-bold text-white bg-mcd-red min-h-[40px] whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
+          複製
+        </button>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">或告訴同事 Session ID：
+        <span id="display-session-id" class="font-mono font-bold text-gray-700"></span>
+      </p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <p class="text-xs text-gray-400 mb-1 font-semibold">已收單人數</p>
+      <div id="collect-orders-list" class="flex flex-wrap gap-1 mb-2 text-sm text-gray-700"></div>
+      <p class="text-2xl font-black text-mcd-red"><span id="collect-count">0</span> 人</p>
+    </div>
+
+    <button id="btn-calculate"
+      class="w-full min-h-[48px] rounded-full bg-mcd-red text-white font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity mb-3">
+      開始計算
+    </button>
+    <button id="btn-collect-back"
+      class="w-full min-h-[48px] rounded-full bg-mcd-yellow text-gray-900 font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
+      回首頁
+    </button>
+  </div>
+</div>
+
+<!-- ============ SCREEN: ORDER ============ -->
+<div id="screen-order" class="screen">
+  <div class="max-w-sm mx-auto px-4 py-8">
+    <div class="text-center mb-6">
+      <div class="inline-block rounded-2xl px-5 py-2 mb-2 bg-mcd-yellow">
+        <span class="font-black text-lg text-mcd-red">填寫訂單</span>
+      </div>
+      <p class="text-sm text-gray-500">選好品項後按送出</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <p class="text-xs text-gray-400 mb-1 font-semibold">你的名字</p>
+      <input id="input-name" type="text" placeholder="例如：小明"
+        class="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-base outline-none focus:border-mcd-red transition-colors" />
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <p class="text-xs text-gray-400 mb-3 font-semibold">選擇品項</p>
+      <div id="item-list" class="space-y-3"></div>
+    </div>
+
+    <button id="btn-submit-order"
+      class="w-full min-h-[48px] rounded-full bg-mcd-red text-white font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity mb-3">
+      送出訂單
+    </button>
+
+    <div id="order-success" class="hidden bg-white rounded-2xl shadow-sm p-4 text-center">
+      <p class="text-2xl mb-1">✅</p>
+      <p class="font-bold text-gray-800">訂單已送出！</p>
+      <p class="text-sm text-gray-500 mt-1">請等待揪團發起人統計結果</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: RESULT ============ -->
+<div id="screen-result" class="screen">
+  <div class="max-w-sm mx-auto px-4 py-8">
+    <div class="text-center mb-6">
+      <div class="inline-block rounded-2xl px-5 py-2 mb-2 bg-mcd-yellow">
+        <span class="font-black text-lg text-mcd-red">結算結果</span>
+      </div>
+    </div>
+
+    <!-- 建議套餐 -->
+    <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <p class="text-xs text-gray-400 mb-2 font-semibold">建議點的套餐</p>
+      <div id="result-meals" class="space-y-2"></div>
+      <div class="border-t mt-3 pt-3 flex justify-between items-center">
+        <span class="font-bold text-gray-700">總金額</span>
+        <span class="text-xl font-black text-mcd-red">$<span id="result-total">0</span></span>
+      </div>
+    </div>
+
+    <!-- 每人分攤 -->
+    <div id="result-persons" class="space-y-3 mb-6"></div>
+
+    <button id="btn-restart"
+      class="w-full min-h-[48px] rounded-full bg-mcd-red text-white font-bold text-base px-6 cursor-pointer hover:opacity-90 transition-opacity">
+      重新來過
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  Supabase 設定（填入你的 Project URL 和 anon key）
+// ============================================================
+const SUPABASE_URL = 'https://ivxjtyxmnbtwpwfzywqx.supabase.co';   // ← 改這裡
+const SUPABASE_ANON_KEY = 'sb_publishable_DhtoxSqtQIhyjuf9ikEDpg_cC3ISlDX';                  // ← 改這裡
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+//  資料層
+// ============================================================
+let menuData = null;
+let currentSessionId = null;
+
+async function loadMenu() {
+  if (menuData) return menuData;
+  const res = await fetch('menu.json');
+  menuData = await res.json();
+  return menuData;
+}
+
+async function saveSession(sessionId, orders) {
+  const { error } = await db.from('sessions').upsert({ session_id: sessionId, orders });
+  if (error) throw new Error('建立 session 失敗：' + error.message);
+}
+
+async function addOrderToSession(sessionId, order) {
+  const session = await loadSession(sessionId);
+  const orders = session?.orders ?? [];
+  const idx = orders.findIndex(o => o.personName === order.personName);
+  const newOrders = idx >= 0
+    ? orders.map((o, i) => i === idx ? order : o)
+    : [...orders, order];
+  const { error } = await db.from('sessions').upsert({ session_id: sessionId, orders: newOrders });
+  if (error) throw new Error('送出訂單失敗：' + error.message);
+}
+
+async function loadSession(sessionId) {
+  const { data, error } = await db.from('sessions').select('*').eq('session_id', sessionId).maybeSingle();
+  if (error) throw new Error('讀取 session 失敗：' + error.message);
+  if (!data) return null;
+  return { sessionId: data.session_id, createdAt: data.created_at, orders: data.orders };
+}
+
+async function deleteSession(sessionId) {
+  const { error } = await db.from('sessions').delete().eq('session_id', sessionId);
+  if (error) throw new Error('刪除 session 失敗：' + error.message);
+}
+
+function generateSessionId() {
+  return Math.random().toString(36).substr(2, 8);
+}
+
+// ============================================================
+//  算法層（純函式，無 DOM）
+// ============================================================
+function calculateBestCombination(orders, meals, items) {
+  const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+
+  let unmetNeeds = [];
+  for (const order of orders) {
+    for (const itemId of order.wantedItems) {
+      unmetNeeds = [...unmetNeeds, { personName: order.personName, itemId, satisfied: false }];
+    }
+  }
+
+  const selectedMeals = [];
+  const assignments = [];
+
+  while (unmetNeeds.some(n => !n.satisfied)) {
+    const unsatisfied = unmetNeeds.filter(n => !n.satisfied);
+
+    // 指標改為「savings = 被覆蓋品項的單點總價 - 套餐價」
+    // 只有 savings > 0 才值得選套餐，否則直接單點更便宜
+    let bestMeal = null;
+    let bestSavings = 0;   // 門檻：savings 必須 > 0 才考慮
+    let bestCoveredCount = 0;
+
+    for (const meal of meals) {
+      const available = meal.contains.flatMap(c => Array(c.quantity).fill(c.itemId));
+      let singleSum = 0;
+      let coveredCount = 0;
+      for (const need of unsatisfied) {
+        const idx = available.indexOf(need.itemId);
+        if (idx >= 0) {
+          singleSum += itemMap[need.itemId]?.singlePrice ?? 0;
+          coveredCount++;
+          available.splice(idx, 1);
+        }
+      }
+      if (coveredCount === 0) continue;
+      const savings = singleSum - meal.price;
+      if (
+        savings > bestSavings ||
+        (savings === bestSavings && coveredCount > bestCoveredCount)
+      ) {
+        bestSavings = savings;
+        bestCoveredCount = coveredCount;
+        bestMeal = meal;
+      }
+    }
+
+    if (bestMeal) {
+      // 選套餐
+      const existing = selectedMeals.find(s => s.meal.id === bestMeal.id);
+      if (existing) existing.count += 1;
+      else selectedMeals.push({ meal: bestMeal, count: 1 });
+
+      // 兩段式：先配對，再用實際覆蓋數均分套餐費用
+      const available = bestMeal.contains.flatMap(c => Array(c.quantity).fill(c.itemId));
+      const toSatisfyIdxs = [];
+      for (let i = 0; i < unmetNeeds.length; i++) {
+        const need = unmetNeeds[i];
+        if (need.satisfied) continue;
+        const idx = available.indexOf(need.itemId);
+        if (idx >= 0) { toSatisfyIdxs.push(i); available.splice(idx, 1); }
+      }
+      const costPerCovered = toSatisfyIdxs.length > 0 ? bestMeal.price / toSatisfyIdxs.length : 0;
+      for (const i of toSatisfyIdxs) {
+        const need = unmetNeeds[i];
+        need.satisfied = true;
+        assignments.push({
+          personName: need.personName,
+          itemId: need.itemId,
+          itemName: itemMap[need.itemId]?.name ?? need.itemId,
+          coveredBy: bestMeal.name,
+          cost: costPerCovered,
+        });
+      }
+    } else {
+      // 沒有任何套餐比單點便宜 → 全部剩餘品項直接單點
+      for (const need of unsatisfied) {
+        const item = itemMap[need.itemId];
+        const price = item?.singlePrice ?? 0;
+        const mealEntry = { id: `single_${need.itemId}`, name: `單點：${item?.name ?? need.itemId}`, price };
+        const existing = selectedMeals.find(s => s.meal.id === mealEntry.id);
+        if (existing) existing.count += 1;
+        else selectedMeals.push({ meal: mealEntry, count: 1 });
+        assignments.push({ personName: need.personName, itemId: need.itemId, itemName: item?.name ?? need.itemId, coveredBy: '單點', cost: price });
+        need.satisfied = true;
+      }
+    }
+  }
+
+  // 彙總每人金額
+  const perPersonCost = {};
+  for (const a of assignments) {
+    perPersonCost[a.personName] = (perPersonCost[a.personName] ?? 0) + a.cost;
+  }
+  for (const name of Object.keys(perPersonCost)) {
+    perPersonCost[name] = Math.round(perPersonCost[name]);
+  }
+
+  // 合併重複套餐
+  const mergedMeals = [];
+  for (const s of selectedMeals) {
+    const ex = mergedMeals.find(m => m.meal.id === s.meal.id);
+    if (ex) ex.count += s.count;
+    else mergedMeals.push({ ...s });
+  }
+
+  const totalPrice = mergedMeals.reduce((sum, s) => sum + s.meal.price * s.count, 0);
+  return { selectedMeals: mergedMeals, assignments, totalPrice, perPersonCost };
+}
+
+// ============================================================
+//  UI 層
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function renderOrderForm(items) {
+  const list = document.getElementById('item-list');
+  list.innerHTML = '';
+  for (const item of items) {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between';
+    row.innerHTML = `
+      <div class="flex-1">
+        <p class="font-semibold text-gray-800 text-sm">${item.name}</p>
+        <p class="text-xs text-gray-400">$${item.singlePrice}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="w-8 h-8 rounded-full bg-mcd-yellow font-bold text-lg flex items-center justify-center cursor-pointer hover:opacity-80"
+          data-id="${item.id}" data-action="minus">−</button>
+        <span class="w-6 text-center font-bold text-gray-700 qty-display" data-id="${item.id}">0</span>
+        <button class="w-8 h-8 rounded-full bg-mcd-yellow font-bold text-lg flex items-center justify-center cursor-pointer hover:opacity-80"
+          data-id="${item.id}" data-action="plus">+</button>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+}
+
+function getOrderQtys() {
+  const qtys = {};
+  document.querySelectorAll('.qty-display').forEach(el => {
+    const qty = parseInt(el.textContent, 10);
+    if (qty > 0) qtys[el.dataset.id] = qty;
+  });
+  return qtys;
+}
+
+function renderResults(result, orders, itemMap) {
+  // 套餐列表
+  const mealsDiv = document.getElementById('result-meals');
+  mealsDiv.innerHTML = result.selectedMeals.length === 0
+    ? '<p class="text-sm text-gray-400">無需點餐</p>'
+    : result.selectedMeals.map(s => `
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-gray-700">${s.meal.name} × ${s.count}</span>
+          <span class="font-bold text-gray-800">$${s.meal.price * s.count}</span>
+        </div>`).join('');
+
+  document.getElementById('result-total').textContent = result.totalPrice;
+
+  // 每人分攤 + 點了什麼
+  const personsDiv = document.getElementById('result-persons');
+  personsDiv.innerHTML = '';
+
+  for (const order of orders) {
+    const name = order.personName;
+    const cost = result.perPersonCost[name] ?? 0;
+
+    // 這個人的 assignments
+    const myAssignments = result.assignments.filter(a => a.personName === name);
+
+    // 統計每個品項的 assignments（可能同一品項多次）
+    const itemLines = myAssignments.map(a =>
+      `<li class="flex justify-between text-xs text-gray-500">
+        <span>${a.itemName} <span class="text-gray-300">← ${a.coveredBy}</span></span>
+        <span>$${Math.round(a.cost)}</span>
+       </li>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-2xl shadow-sm p-4';
+    card.innerHTML = `
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-gray-800 text-base">${name}</span>
+        <span class="text-2xl font-black text-mcd-red">$${cost}</span>
+      </div>
+      <ul class="space-y-1 border-t pt-2">${itemLines}</ul>
+    `;
+    personsDiv.appendChild(card);
+  }
+}
+
+async function updateCollectScreen() {
+  if (!currentSessionId) return;
+  try {
+    const session = await loadSession(currentSessionId);
+    const orders = session?.orders ?? [];
+    document.getElementById('collect-count').textContent = orders.length;
+    const list = document.getElementById('collect-orders-list');
+    list.innerHTML = orders.length === 0
+      ? '<span class="text-gray-400 text-sm">還沒有人填單…</span>'
+      : orders.map(o => `<span class="bg-yellow-100 rounded px-2 py-0.5 text-sm">${o.personName}</span>`).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ============================================================
+//  初始化 & 事件綁定
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  const urlSession = new URLSearchParams(window.location.search).get('session');
+
+  if (urlSession) {
+    currentSessionId = urlSession;
+    const isCreator = localStorage.getItem(`mcd_creator_${urlSession}`);
+    if (isCreator) {
+      // 創建者回來 → 收單頁
+      document.getElementById('share-url').value = `${location.origin}${location.pathname}?session=${urlSession}`;
+      document.getElementById('display-session-id').textContent = urlSession;
+      showScreen('screen-collect');
+      await updateCollectScreen();
+    } else {
+      // 同事填單頁
+      try {
+        const { items } = await loadMenu();
+        renderOrderForm(items);
+        showScreen('screen-order');
+      } catch (e) {
+        alert('無法載入菜單，請確認 menu.json 存在');
+      }
+    }
+  } else {
+    showScreen('screen-home');
+  }
+
+  // 首頁
+  document.getElementById('btn-create').addEventListener('click', async () => {
+    currentSessionId = generateSessionId();
+    try {
+      await saveSession(currentSessionId, []);
+      localStorage.setItem(`mcd_creator_${currentSessionId}`, '1');
+      document.getElementById('share-url').value = `${location.origin}${location.pathname}?session=${currentSessionId}`;
+      document.getElementById('display-session-id').textContent = currentSessionId;
+      history.replaceState(null, '', `?session=${currentSessionId}`);
+      showScreen('screen-collect');
+      await updateCollectScreen();
+    } catch (e) {
+      alert('建立揪團失敗：' + e.message);
+    }
+  });
+
+  document.getElementById('btn-join').addEventListener('click', async () => {
+    const id = document.getElementById('input-join-session').value.trim();
+    if (!id) { alert('請輸入 Session ID'); return; }
+    currentSessionId = id;
+    try {
+      const { items } = await loadMenu();
+      renderOrderForm(items);
+      history.replaceState(null, '', `?session=${currentSessionId}`);
+      showScreen('screen-order');
+    } catch (e) {
+      alert('無法載入菜單，請確認 menu.json 存在');
+    }
+  });
+
+  // 收單頁
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('share-url').value).then(() => {
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = '已複製！';
+      setTimeout(() => { btn.textContent = '複製'; }, 1500);
+    });
+  });
+
+  document.getElementById('btn-calculate').addEventListener('click', async () => {
+    let session;
+    try {
+      session = await loadSession(currentSessionId);
+    } catch (e) {
+      alert('讀取訂單失敗：' + e.message);
+      return;
+    }
+    if (!session || session.orders.length === 0) {
+      alert('還沒有任何訂單，請等同事填完再計算');
+      return;
+    }
+    try {
+      const { meals, items } = await loadMenu();
+      const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
+      const result = calculateBestCombination(session.orders, meals, items);
+      renderResults(result, session.orders, itemMap);
+      showScreen('screen-result');
+    } catch (e) {
+      alert('計算時發生錯誤：' + e.message);
+    }
+  });
+
+  document.getElementById('btn-collect-back').addEventListener('click', () => {
+    history.replaceState(null, '', location.pathname);
+    currentSessionId = null;
+    showScreen('screen-home');
+  });
+
+  setInterval(() => {
+    if (document.getElementById('screen-collect').classList.contains('active')) updateCollectScreen();
+  }, 3000);
+
+  // 填單頁
+  document.getElementById('item-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const display = document.querySelector(`.qty-display[data-id="${btn.dataset.id}"]`);
+    let qty = parseInt(display.textContent, 10);
+    if (btn.dataset.action === 'plus') qty++;
+    else if (btn.dataset.action === 'minus' && qty > 0) qty--;
+    display.textContent = qty;
+  });
+
+  document.getElementById('btn-submit-order').addEventListener('click', async () => {
+    const name = document.getElementById('input-name').value.trim();
+    if (!name) { alert('請輸入你的名字'); return; }
+    const qtys = getOrderQtys();
+    if (Object.keys(qtys).length === 0) { alert('請至少選一個品項'); return; }
+    const wantedItems = Object.entries(qtys).flatMap(([id, qty]) => Array(qty).fill(id));
+    const btn = document.getElementById('btn-submit-order');
+    btn.disabled = true;
+    btn.textContent = '送出中…';
+    try {
+      await addOrderToSession(currentSessionId, { personName: name, wantedItems });
+      btn.classList.add('hidden');
+      document.getElementById('order-success').classList.remove('hidden');
+    } catch (e) {
+      alert('送出失敗：' + e.message);
+      btn.disabled = false;
+      btn.textContent = '送出訂單';
+    }
+  });
+
+  // 結果頁
+  document.getElementById('btn-restart').addEventListener('click', async () => {
+    if (currentSessionId) {
+      try { await deleteSession(currentSessionId); } catch (e) { console.error(e); }
+      localStorage.removeItem(`mcd_creator_${currentSessionId}`);
+    }
+    currentSessionId = null;
+    history.replaceState(null, '', location.pathname);
+    showScreen('screen-home');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Claude & IDE configs
+.claude/
+.vscode/
+claude.md

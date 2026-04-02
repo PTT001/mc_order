@@ -1,0 +1,137 @@
+{
+  "_source": "https://www.cashfeel.com.tw/article/麥當勞-麥當勞菜單-點餐",
+  "_note": "套餐價格為「A 經典配餐」版本（主餐 + 中薯$50 + 飲料$38），配餐附加費 $65，比分開單點省 $23",
+  "meals": [
+    {
+      "id": "meal_big_mac",
+      "name": "大麥克經典套餐",
+      "price": 143,
+      "contains": [
+        { "itemId": "big_mac",  "quantity": 1 },
+        { "itemId": "fries_m",  "quantity": 1 },
+        { "itemId": "drink_m",  "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_double_beef",
+      "name": "雙層牛肉吉士堡經典套餐",
+      "price": 137,
+      "contains": [
+        { "itemId": "double_beef", "quantity": 1 },
+        { "itemId": "fries_m",     "quantity": 1 },
+        { "itemId": "drink_m",     "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_quarter_pounder",
+      "name": "四盎司牛肉堡經典套餐",
+      "price": 157,
+      "contains": [
+        { "itemId": "quarter_pounder", "quantity": 1 },
+        { "itemId": "fries_m",         "quantity": 1 },
+        { "itemId": "drink_m",         "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_mcchicken",
+      "name": "麥香雞經典套餐",
+      "price": 113,
+      "contains": [
+        { "itemId": "mcchicken", "quantity": 1 },
+        { "itemId": "fries_m",   "quantity": 1 },
+        { "itemId": "drink_m",   "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_spicy_chicken",
+      "name": "勁辣雞腿堡經典套餐",
+      "price": 143,
+      "contains": [
+        { "itemId": "spicy_chicken", "quantity": 1 },
+        { "itemId": "fries_m",       "quantity": 1 },
+        { "itemId": "drink_m",       "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_grilled_chicken",
+      "name": "嫩煎雞腿堡經典套餐",
+      "price": 148,
+      "contains": [
+        { "itemId": "grilled_chicken", "quantity": 1 },
+        { "itemId": "fries_m",         "quantity": 1 },
+        { "itemId": "drink_m",         "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_filet_o_fish",
+      "name": "麥香魚經典套餐",
+      "price": 117,
+      "contains": [
+        { "itemId": "filet_o_fish", "quantity": 1 },
+        { "itemId": "fries_m",      "quantity": 1 },
+        { "itemId": "drink_m",      "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_nuggets6",
+      "name": "麥克雞塊6塊經典套餐",
+      "price": 133,
+      "contains": [
+        { "itemId": "nuggets_6", "quantity": 1 },
+        { "itemId": "fries_m",   "quantity": 1 },
+        { "itemId": "drink_m",   "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_nuggets10",
+      "name": "麥克雞塊10塊經典套餐",
+      "price": 174,
+      "contains": [
+        { "itemId": "nuggets_10", "quantity": 1 },
+        { "itemId": "fries_m",    "quantity": 1 },
+        { "itemId": "drink_m",    "quantity": 1 }
+      ]
+    },
+    {
+      "id": "meal_crispy_chicken2",
+      "name": "麥脆雞腿2塊經典套餐",
+      "price": 191,
+      "contains": [
+        { "itemId": "crispy_chicken_2", "quantity": 1 },
+        { "itemId": "fries_m",          "quantity": 1 },
+        { "itemId": "drink_m",          "quantity": 1 }
+      ]
+    }
+  ],
+  "items": [
+    { "id": "big_mac",          "name": "大麥克",             "singlePrice": 78  },
+    { "id": "double_beef",      "name": "雙層牛肉吉士堡",     "singlePrice": 72  },
+    { "id": "quarter_pounder",  "name": "四盎司牛肉堡",       "singlePrice": 92  },
+    { "id": "mcchicken",        "name": "麥香雞",             "singlePrice": 48  },
+    { "id": "spicy_chicken",    "name": "勁辣雞腿堡",         "singlePrice": 78  },
+    { "id": "grilled_chicken",  "name": "嫩煎雞腿堡",         "singlePrice": 83  },
+    { "id": "filet_o_fish",     "name": "麥香魚",             "singlePrice": 52  },
+    { "id": "nuggets_4",        "name": "麥克雞塊 4 塊",      "singlePrice": 48  },
+    { "id": "nuggets_6",        "name": "麥克雞塊 6 塊",      "singlePrice": 68  },
+    { "id": "nuggets_10",       "name": "麥克雞塊 10 塊",     "singlePrice": 109 },
+    { "id": "crispy_chicken_2", "name": "麥脆雞腿 2 塊",      "singlePrice": 126 },
+    { "id": "cheese_burger",    "name": "吉事漢堡",           "singlePrice": 48  },
+    { "id": "hamburger",        "name": "漢堡",               "singlePrice": 36  },
+    { "id": "fries_s",          "name": "薯條（小）",         "singlePrice": 40  },
+    { "id": "fries_m",          "name": "薯條（中）",         "singlePrice": 50  },
+    { "id": "fries_l",          "name": "薯條（大）",         "singlePrice": 66  },
+    { "id": "sweet_potato",     "name": "金黃地瓜條",         "singlePrice": 66  },
+    { "id": "hashbrown",        "name": "薯餅",               "singlePrice": 37  },
+    { "id": "apple_pie",        "name": "蘋果派",             "singlePrice": 40  },
+    { "id": "corn_cup_s",       "name": "玉米湯（小）",       "singlePrice": 45  },
+    { "id": "corn_cup_l",       "name": "玉米湯（大）",       "singlePrice": 55  },
+    { "id": "salad",            "name": "四季沙拉",           "singlePrice": 55  },
+    { "id": "fruit_bag",        "name": "水果袋",             "singlePrice": 42  },
+    { "id": "soft_serve",       "name": "蛋捲冰淇淋",         "singlePrice": 18  },
+    { "id": "oreo_mcflurry",    "name": "冰炫風（OREO）",     "singlePrice": 59  },
+    { "id": "drink_m",          "name": "冷熱飲（中）",       "singlePrice": 38  },
+    { "id": "drink_s",          "name": "冷熱飲（小）",       "singlePrice": 33  },
+    { "id": "coffee_m",         "name": "經典美式咖啡（中）", "singlePrice": 50  },
+    { "id": "latte_m",          "name": "經典那堤（中）",     "singlePrice": 77  }
+  ]
+}
