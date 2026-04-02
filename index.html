@@ -46,6 +46,11 @@
       </button>
     </div>
 
+    <div id="my-sessions-block" class="hidden bg-white rounded-2xl shadow-sm p-4 mb-4">
+      <h2 class="font-bold text-gray-700 mb-3">我建立的揪團</h2>
+      <div id="my-sessions-list" class="space-y-2"></div>
+    </div>
+
     <div class="bg-white rounded-2xl shadow-sm p-4">
       <h2 class="font-bold text-gray-700 mb-3">加入揪團</h2>
       <input id="input-join-session" type="text" maxlength="8" placeholder="輸入 Session ID（8 碼）"
@@ -335,6 +340,45 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
+  if (id === 'screen-home') renderMySessions();
+}
+
+function renderMySessions() {
+  const sessionIds = Object.keys(localStorage)
+    .filter(k => k.startsWith('mcd_creator_'))
+    .map(k => k.replace('mcd_creator_', ''));
+
+  const block = document.getElementById('my-sessions-block');
+  const list = document.getElementById('my-sessions-list');
+
+  if (sessionIds.length === 0) {
+    block.classList.add('hidden');
+    return;
+  }
+
+  block.classList.remove('hidden');
+  list.innerHTML = sessionIds.map(id => `
+    <div class="flex items-center justify-between gap-2">
+      <span class="font-mono text-sm text-gray-600">${id}</span>
+      <button
+        class="px-4 py-2 rounded-full bg-mcd-red text-white text-sm font-bold min-h-[40px] cursor-pointer hover:opacity-90 transition-opacity"
+        data-resume="${id}">
+        繼續收單
+      </button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-resume]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.resume;
+      currentSessionId = id;
+      document.getElementById('share-url').value = `${location.origin}${location.pathname}?session=${id}`;
+      document.getElementById('display-session-id').textContent = id;
+      history.replaceState(null, '', `?session=${id}`);
+      showScreen('screen-collect');
+      updateCollectScreen();
+    });
+  });
 }
 
 function renderOrderForm(items) {
@@ -456,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     showScreen('screen-home');
+    renderMySessions();
   }
 
   // 首頁
